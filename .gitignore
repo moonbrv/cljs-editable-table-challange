@@ -71,3 +71,4 @@ pom.xml
 .cpcache/
 .rebel_readline_history
 .idea/
+resources/public/cljs-out
