@@ -1,25 +1,79 @@
 (ns ^:figwheel-hooks edit-table-task.core
   (:require
     [goog.dom :as gdom]
-    [rum.core :as rum]))
+    [goog.labs.format.csv :as csv]
+    [rum.core :as rum]
+    [cljs.core.async :refer [chan <! put!]]
+    [cljs.core.async :refer-macros [go go-loop alt!]]))
 
 ;; ----- UTILS -----
 
 ;; ----- MODEL -----
-(def initial-state-model {:table-headers {:company-header "Company"
-                                          :income-header "Income"}
-                          :table-values {"369deaef-c6ee-4836-9f74-e9593233abc8" {:company "Ace"
-                                                                                 :income 42}
-                                         "072da7c1-f5a6-4dee-bd2f-ab29b7273410" {:company "Acme"
-                                                                                 :income 7}
-                                         "419fe665-625a-4857-a1b8-cf1ebf287944" {:company "Evil"
-                                                                                 :income 28}}
-                          :uploaded true
-                          :error false})
+(comment
+  (def state-example {:table-headers {:company-header "Company"
+                                      :income-header "Income"}
+                      :table-values {"369deaef-c6ee-4836-9f74-e9593233abc8" {:company "Ace"
+                                                                             :income 42}
+                                     "072da7c1-f5a6-4dee-bd2f-ab29b7273410" {:company "Acme"
+                                                                             :income 72}
+                                     "419fe665-625a-4857-a1b8-cf1ebf287944" {:company "Evil"
+                                                                             :income 28}}
+                      :uploaded true
+                      :error false}))
 
-(defonce state (atom initial-state-model))
+(defonce state (atom {:table-headers {:company-header ""
+                                      :income-header ""}
+                      :table-values {}
+                      :uploaded false
+                      :error false}))
+
+(def first-file
+  (map (fn [e]
+         (let [target (.-currentTarget e)
+               file (-> target .-files (aget 0))]
+           (set! (.-value target) "")
+           file))))
+
+(def extract-result
+  (map #(-> % .-target .-result csv/parse js->clj)))
+
+(def upload-reqs (chan 1 first-file))
+(def file-reads (chan 1 extract-result))
+
+(defn put-upload [e]
+  (put! upload-reqs e))
+
+(go-loop []
+         (let [reader (js/FileReader.)
+               file (<! upload-reqs)]
+           (set! (.-onload reader) #(put! file-reads %))
+           (.readAsText reader file)
+           (recur)))
+
+(go-loop []
+         (let [res (<! file-reads)
+               headers (first res)
+               body (rest res)
+               table-values (reduce
+                              (fn [acc row]
+                                (assoc acc (str (random-uuid))
+                                           {:company (get row 0)
+                                            :income (js/Number (get row 1))}))
+                              {} body)
+               state-update {:table-headers {:company-header (get headers 0)
+                                             :income-header (get headers 1)}
+                             :table-values table-values
+                             :uploaded true
+                             :error false}]
+           (swap! state merge state-update))
+         (recur))
 
 ;; ----- VIEWS -----
+(rum/defc upload-button []
+  [:input.button {:type "file"
+                  :accept ".csv"
+                  :on-change put-upload}])
+
 (rum/defc table-input [value type change-handler]
   [:input {:value value
            :type type
@@ -66,8 +120,9 @@
 (rum/defc app-root < rum/reactive []
   [:section.section
    [:h1.title "App content"]
-   [:div.container [:pre (str (rum/react state))]]
-   (editable-table)])
+   [:div.container
+    (upload-button)
+    (editable-table)]])
 
 (defn mount-app-element []
   (when-let [el (gdom/getElement "app")]
