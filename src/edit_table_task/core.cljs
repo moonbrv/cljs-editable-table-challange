@@ -27,7 +27,7 @@
                       :uploaded false
                       :error false}))
 
-(def first-file
+(def upload-file
   (map (fn [e]
          (let [target (.-currentTarget e)
                file (-> target .-files (aget 0))]
@@ -37,7 +37,7 @@
 (def extract-result
   (map #(-> % .-target .-result csv/parse js->clj)))
 
-(def upload-reqs (chan 1 first-file))
+(def upload-reqs (chan 1 upload-file))
 (def file-reads (chan 1 extract-result))
 
 (defn put-upload [e]
