@@ -4,7 +4,7 @@
     [goog.labs.format.csv :as csv]
     [rum.core :as rum]
     [cljs.core.async :refer [chan <! put!]]
-    [cljs.core.async :refer-macros [go go-loop alt!]]))
+    [cljs.core.async :refer-macros [go-loop]]))
 
 ;; ----- UTILS -----
 
