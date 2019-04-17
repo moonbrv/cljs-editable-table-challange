@@ -80,21 +80,22 @@
            (recur)))
 
 (go-loop []
-         (let [res (<! file-reads)
-               headers (first res)
-               body (rest res)
-               table-values (reduce
-                              (fn [acc row]
-                                (assoc acc (str (random-uuid))
-                                           {:company (get row 0)
-                                            :income (js/Number (get row 1))}))
-                              {} body)
-               state-update {:table-headers {:company-header (get headers 0)
-                                             :income-header (get headers 1)}
-                             :table-values table-values
-                             :uploaded true
-                             :error false}]
-           (swap! state merge state-update))
+         (let [res (<! file-reads)]
+           (if (s/valid? ::csv res)
+             (let [data (s/conform ::csv res)
+                   headers (:headers data)
+                   body (:body data)]
+               (swap! state merge {:table-headers {:company-header (get headers 0)
+                                                   :income-header  (get headers 1)}
+                                   :table-values  (reduce
+                                                    (fn [acc row]
+                                                      (assoc acc (str (random-uuid))
+                                                                 {:company (get row 0)
+                                                                  :income (js/Number (get row 1))}))
+                                                    {} body)
+                                   :uploaded      true
+                                   :error         false}))
+             (swap! state merge {:error true})))
          (recur))
 
 ;; ----- VIEWS -----
