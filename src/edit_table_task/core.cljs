@@ -10,7 +10,12 @@
 ;; ----- UTILS/SPEC -----
 (s/def ::valid-string (every-pred string? not-empty))
 
-(s/def ::headers (s/coll-of ::valid-string))
+(s/def ::two-columns #(= 2 (count %)))
+
+(s/def ::headers
+  (s/and
+    (s/coll-of ::valid-string)
+    ::two-columns))
 
 (s/def ::->num
   (s/conformer
@@ -21,7 +26,9 @@
           num)))))
 
 (s/def ::table-row
-  (s/tuple ::valid-string ::->num))
+  (s/and
+    (s/tuple ::valid-string ::->num)
+    ::two-columns))
 
 (s/def ::body (s/coll-of ::table-row))
 
