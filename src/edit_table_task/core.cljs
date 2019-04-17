@@ -171,3 +171,5 @@
 
 (defn ^:after-load on-reload []
   (mount-app-element))
+
+(mount-app-element)
