@@ -161,7 +161,9 @@
                                   [:button.button {:on-click reset-state} "Try Again"]]]]
     (:uploaded (rum/react state)) [:section.section
                                    [:h1.title "Edit table data in the table"]
-                                   [:div.container (editable-table)]]
+                                   [:div.container
+                                    (editable-table)
+                                    [:button.button {:on-click reset-state} "Clean data"]]]
     :else [:section.section
            [:div.container (upload-button)]]))
 
