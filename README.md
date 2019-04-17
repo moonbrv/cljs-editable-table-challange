@@ -1,10 +1,9 @@
-# edit-table-task.core
+## Tech task: editable table with loading CSV file
 
-FIXME: Write a one-line description of your library/project.
-
-## Overview
-
-FIXME: Write a paragraph about the library/project and highlight its goals.
+Tech stack:
+- rum
+- core.async
+- core.spec
 
 ## Development
 
