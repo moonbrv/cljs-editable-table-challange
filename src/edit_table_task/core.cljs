@@ -50,11 +50,16 @@
                       :uploaded true
                       :error false}))
 
-(defonce state (atom {:table-headers {:company-header ""
-                                      :income-header ""}
-                      :table-values {}
-                      :uploaded false
-                      :error false}))
+(def initial-state {:table-headers {:company-header ""
+                                    :income-header ""}
+                    :table-values {}
+                    :uploaded false
+                    :error false})
+
+(defonce state (atom initial-state))
+
+(defn reset-state []
+  (swap! state merge initial-state))
 
 (def upload-file
   (map (fn [e]
@@ -148,11 +153,17 @@
      [:tfoot [:tr [:td "Total"] [:td total-sum]]]]))
 
 (rum/defc app-root < rum/reactive []
-  [:section.section
-   [:h1.title "App content"]
-   [:div.container
-    (upload-button)
-    (editable-table)]])
+  (cond
+    (:error (rum/react state)) [:section.hero.is-danger
+                                [:div.hero-body
+                                 [:div.container
+                                  [:h1.title "CSV file contains invalid data"]
+                                  [:button.button {:on-click reset-state} "Try Again"]]]]
+    (:uploaded (rum/react state)) [:section.section
+                                   [:h1.title "Edit table data in the table"]
+                                   [:div.container (editable-table)]]
+    :else [:section.section
+           [:div.container (upload-button)]]))
 
 (defn mount-app-element []
   (when-let [el (gdom/getElement "app")]
