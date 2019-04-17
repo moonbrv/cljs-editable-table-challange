@@ -4,9 +4,38 @@
     [goog.labs.format.csv :as csv]
     [rum.core :as rum]
     [cljs.core.async :refer [chan <! put!]]
-    [cljs.core.async :refer-macros [go-loop]]))
+    [cljs.core.async :refer-macros [go-loop]]
+    [clojure.spec.alpha :as s]))
 
-;; ----- UTILS -----
+;; ----- UTILS/SPEC -----
+(s/def ::valid-string (every-pred string? not-empty))
+
+(s/def ::headers (s/coll-of ::valid-string))
+
+(s/def ::->num
+  (s/conformer
+    (fn [v]
+      (let [num (js/Number v)]
+        (if (js/isNaN num)
+          ::s/invalid
+          num)))))
+
+(s/def ::table-row
+  (s/tuple ::valid-string ::->num))
+
+(s/def ::body (s/coll-of ::table-row))
+
+(s/def ::->table
+  (s/conformer
+    (fn [csv-coll]
+      {:headers (first csv-coll)
+       :body (rest csv-coll)})))
+
+(s/def ::table
+  (s/keys :req-un [::headers ::body]))
+
+(s/def ::csv
+  (s/and ::->table ::table))
 
 ;; ----- MODEL -----
 (comment
