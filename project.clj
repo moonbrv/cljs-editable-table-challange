@@ -18,7 +18,7 @@
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" edit-table-task.test-runner]}
 
-  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.1.9"]
+  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.0"]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
                    }})
 
